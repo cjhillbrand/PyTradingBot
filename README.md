@@ -1,0 +1,2 @@
+# PyTradingBot
+Python Trading Bot
