@@ -127,3 +127,12 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Data
+data/
+
+# Whatever the heck this is
+.idea/
+
+# Alpha Vantage Key
+AlphaVantageApiKey.json
