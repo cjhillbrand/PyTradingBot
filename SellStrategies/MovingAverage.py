@@ -6,10 +6,14 @@ class MovingAverage(SellStrategy):
     SHORT_KEY = 'sk'
     LONG_KEY = 'lk'
 
-    def __init__(self):
-        print("\nYou have chosen: Moving Average for a sell strategy")
-        self.short_avg = self.__get_avg__("Short Average")
-        self.long_avg = self.__get_avg__("Long Average")
+    def __init__(self, short=-1, long=-1):
+        if short == -1 or long == -1:
+            print("\nYou have chosen: Moving Average for a sell strategy")
+            self.short_avg = self.__get_avg__("Short Average")
+            self.long_avg = self.__get_avg__("Long Average")
+        else:
+            self.short_avg = short
+            self.long_avg = long
 
     def __get_avg__(self, name):
         val = -1
@@ -22,6 +26,8 @@ class MovingAverage(SellStrategy):
         return val
 
     def __calc_avg__(self, avg, data):
+        if avg >= len(data):
+            avg = len(data) - 1
         result = np.cumsum(data)
         result[avg:] = result.loc[avg:].reset_index(drop=True) - result.iloc[:-avg].reset_index(drop=True)
         result.loc[:avg] = result.loc[avg]

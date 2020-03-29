@@ -47,9 +47,10 @@ def _int_to_st(st):
         return SellTypes.OTHER_SELL_STRAT
 
 
-def new_sell_strategy(st):
+def new_sell_strategy(st, *args):
     st = _int_to_st(st)
     if st == SellTypes.MOVING_AVG:
-        print("here")
+        if args:
+            return MovingAverage(args[0], args[1])
         return MovingAverage()
     # TODO As you create more buy strategies fill them in here.

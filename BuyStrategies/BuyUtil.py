@@ -44,9 +44,10 @@ def _int_to_bt(bt):
         return BuyTypes.OTHER_BUY_STRAT
 
 
-def new_buy_strategy(bt):
+def new_buy_strategy(bt, *args):
     bt = _int_to_bt(bt)
     if bt == BuyTypes.MOVING_AVG:
-        print("here")
+        if args:
+            return MovingAverage(args[0], args[1])
         return MovingAverage()
     # TODO As you create more buy strategies fill them in here.

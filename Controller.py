@@ -7,6 +7,7 @@ import pandas as pd
 import progressbar
 from multiprocessing import Process, Manager
 
+
 class Controller:
 
     ERROR_CODE = -1
@@ -74,7 +75,41 @@ class Controller:
     def _parallel_helper(self, result, stock_data, sym, t):
         result[sym] = t.calc_data(stock_data[sym])
 
+    # TODO Change the name iter
+    def _set_buy_strategy_iter(self, bt):
+        result = dict()
+        stock_data = self.model.get_long_stock_data()
+
+        manager = Manager()
+        result = manager.dict()
+        job = [Process(target=self._parallel_helper, args=(result, stock_data, sym, bt))
+               for sym in stock_data.keys()]
+        _ = [p.start() for p in job]
+        _ = [p.join() for p in job]
+
+        self.model.set_buy_strategy(bt)
+        self.model.set_buy_strategy_data(result)
+        return self.SUCCESS_CODE
+
+    def _set_sell_strategy_iter(self, st):
+        result = dict()
+        stock_data = self.model.get_long_stock_data()
+
+        manager = Manager()
+        result = manager.dict()
+        job = [Process(target=self._parallel_helper, args=(result, stock_data, sym, st))
+               for sym in stock_data.keys()]
+        _ = [p.start() for p in job]
+        _ = [p.join() for p in job]
+
+        self.model.set_sell_strategy(st)
+        self.model.set_sell_strategy_data(result)
+        return self.SUCCESS_CODE
+
     def set_buy_strategy(self, bt):
+        if type(bt) != int:
+            return self._set_buy_strategy_iter(bt)
+
         if not valid_bt(bt):
             return self.ERROR_CODE
 
@@ -90,7 +125,8 @@ class Controller:
         if len(stock_data) > 100:
             manager = Manager()
             result = manager.dict()
-            job = [Process(target=self._parallel_helper, args=(result, stock_data, sym, bt)) for sym in stock_data.keys()]
+            job = [Process(target=self._parallel_helper, args=(result, stock_data, sym, bt))
+                   for sym in stock_data.keys()]
             _ = [p.start() for p in job]
             _ = [p.join() for p in job]
         # Iterative computation
@@ -113,11 +149,12 @@ class Controller:
         return self.SUCCESS_CODE
 
     def set_sell_strategy(self, st):
+        if type(st) != int:
+            return self._set_sell_strategy_iter(st)
         if not valid_st(st):
             return self.ERROR_CODE
 
         st = new_sell_strategy(st)
-        result = dict()
 
         # Calculate the data that we need for the sell strategy. This changes depending
         # on the sell strategy, but it returns a dictionary regardless
@@ -146,8 +183,12 @@ class Controller:
 
         return self.SUCCESS_CODE
 
-    def simulate_strategies(self, days):
-        print("Simulating Strategies")
+    def simulate_strategies(self, days, verbosity=1):
+        if verbosity > 0:
+            print("Simulating Strategies")
+
+        # store all of the percent gain for the buy sell strats
+        result = dict()
 
         # Get prices from the Model and crop
         prices_all = self.model.get_long_stock_data()
@@ -163,7 +204,7 @@ class Controller:
         for sym in bt_data_all.keys():
             prices = prices_all[sym]
 
-            if days >= len(prices):
+            if days >= len(prices) or days == -1:
                 days = len(prices) - 1
 
             if days < 0:
@@ -181,17 +222,23 @@ class Controller:
             st_times = st.get_sell_times(days, st_data)
 
             if len(bt_times) == 0:
-                print('No good time to buy %s skipping...' % sym)
-                net_worth += 2000
+                if verbosity > 0:
+                    print('No good time to buy %s skipping...' % sym)
+                net_worth += 200
+                result[sym] = -101
                 continue
-
-            cash = 2000  # 100,000
+            if verbosity > 1:
+                print(bt_times)
+                print(st_times)
+            cash = 200  # 100,000
             stock_qty = math.floor(cash / prices[bt_times[0]])
-            print("Initial buy at %f , Qty: %d" % (prices[bt_times[0]], stock_qty))
+            if verbosity > 0:
+                print("Initial buy at %f , Qty: %d" % (prices[bt_times[0]], stock_qty))
             cash -= stock_qty * prices[bt_times[0]]
             bt_idx = 1
             if len(st_times) == 0:
-                print('No good time to sell %s selling on last day...' % sym)
+                if verbosity > 0:
+                    print('No good time to sell %s selling on last day...' % sym)
                 st_idx = 0
             elif st_times[len(st_times) - 1] < bt_times[0]:
                 st_idx = len(st_times)
@@ -203,28 +250,28 @@ class Controller:
                     # TODO figure out an approppiate number of stocks to sell and buy
                     stock_qty = math.floor(cash / prices[bt_times[bt_idx]])
                     cash -= stock_qty * prices[bt_times[bt_idx]]
-                    # print("Buying all stonks at %f on day %d \nTotal Cash on hand: %f"
-                    #      % (prices[bt_times[bt_idx]], bt_times[bt_idx], cash))
                     bt_idx += 1
 
                 else:
                     cash += prices[st_times[st_idx]] * stock_qty
                     stock_qty = 0
-                    # print("Selling all stonks at %f on day %d \nTotal Cash on hand: %f"
-                    #      % (prices[st_times[st_idx]], st_times[st_idx], cash))
                     st_idx += 1
             if st_idx < len(st_times):
                 cash += prices[st_times[-1]] * stock_qty
                 stock_qty = 0
             end_stock_val = cash + prices[len(prices) - 1] * stock_qty
-            print('Percent Gain for %s is: %f%%' % (sym,  (end_stock_val - 2000) / 20))
+            if verbosity > 0:
+                print('Percent Gain for %s is: %f%%' % (sym,  (end_stock_val - 200) / 2))
             net_worth += end_stock_val
+            result[sym] = (end_stock_val - 200) / 2
 
-        start_cash = len(prices_all) * 2000
-        print('Starting Cash: %d End Cash: %f' % (start_cash, net_worth))
+        start_cash = len(prices_all) * 200
+        if verbosity > -1:
+            print('Starting Cash: %d End Cash: %f' % (start_cash, net_worth))
         pct_chg = 100 * (net_worth - start_cash) / start_cash
-        print('Percent Gain: %f' % pct_chg)
-        return self.SUCCESS_CODE
+        if verbosity > -1:
+            print('Percent Gain: %f' % pct_chg)
+        return result
 
     def run(self):
         print('Trading Bot is running')
