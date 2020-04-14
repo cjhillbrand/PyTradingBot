@@ -3,6 +3,7 @@ from Model import Model
 from BuyStrategies.BuyUtil import valid_bt, new_buy_strategy
 from SellStrategies.SellUtil import valid_st, new_sell_strategy
 import math
+import time
 import pandas as pd
 import progressbar
 from multiprocessing import Process, Manager
@@ -21,8 +22,8 @@ class Controller:
         self.mw = MiddleWare()
         self.model = model
 
-    def fill_data(self, symbol):
-        df = self.mw.get_alpha_vantage_symbol(symbol)
+    def fill_data(self, symbol, crypto=False):
+        df = self.mw.get_alpha_vantage_symbol(symbol, crypto)
 
         # This is our error check since across the program
         # we use the Error code -1 to signify a fault
@@ -224,13 +225,14 @@ class Controller:
             if len(bt_times) == 0:
                 if verbosity > 0:
                     print('No good time to buy %s skipping...' % sym)
-                net_worth += 200
+                net_worth += CASH_CONSTANT
                 result[sym] = -101
                 continue
             if verbosity > 1:
                 print(bt_times)
                 print(st_times)
-            cash = 200  # 100,000
+            CASH_CONSTANT = 20000
+            cash = CASH_CONSTANT  # 100,000
             stock_qty = math.floor(cash / prices[bt_times[0]])
             if verbosity > 0:
                 print("Initial buy at %f , Qty: %d" % (prices[bt_times[0]], stock_qty))
@@ -261,11 +263,11 @@ class Controller:
                 stock_qty = 0
             end_stock_val = cash + prices[len(prices) - 1] * stock_qty
             if verbosity > 0:
-                print('Percent Gain for %s is: %f%%' % (sym,  (end_stock_val - 200) / 2))
+                print('Percent Gain for %s is: %f%%' % (sym,  (end_stock_val - CASH_CONSTANT) / 2))
             net_worth += end_stock_val
-            result[sym] = (end_stock_val - 200) / 2
+            result[sym] = (end_stock_val - CASH_CONSTANT) / 2
 
-        start_cash = len(prices_all) * 200
+        start_cash = len(prices_all) * CASH_CONSTANT
         if verbosity > -1:
             print('Starting Cash: %d End Cash: %f' % (start_cash, net_worth))
         pct_chg = 100 * (net_worth - start_cash) / start_cash
@@ -274,4 +276,36 @@ class Controller:
         return result
 
     def run(self):
-        print('Trading Bot is running')
+        print("Getting real time data is only supported with the crypto symbols"
+              "this is supported with the coinbase API")
+        # TODO: Grab the stored historical data
+        day_data = pd.DataFrame(columns=['Price', 'Time'])
+        buy_data = self.model.get_buy_strategy_data()
+        sell_data = self.model.get_sell_strategy_data()
+        bt = self.model.get_buy_strategy()
+        st = self.model.get_sell_strategy()
+
+        # TODO: Create a loop that pulls data from coinbase and appends that data to
+        #   the historical data.
+        while(True):
+            for sym in buy_data.keys():
+                curr_price = self.mw.get_crypto_price("spot", sym)
+                day_data = day_data.append(curr_price, ignore_index=True)
+                # TODO: Once appeneded we need to ask the buy and sell strategies whether or not it is
+                #   a good time to buy or sell.
+                buy = bt.buy_now(buy_data[sym], day_data)
+                sell = st.sell_now(sell_data[sym], day_data)
+                price = day_data.tail(1)
+                price = price['Price'].values[0]
+                if buy:
+                    print("Executing buy at: %s" % price)
+                if sell:
+                    print("Executing sell at: %s" % price)
+            time.sleep(60)
+
+
+
+
+        # TODO: If it is a good time to buy or sell, ask coinbase to execute trade
+
+        # TODO: Retrieve info from trade and then send messages via twilio.

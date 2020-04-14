@@ -3,12 +3,14 @@
 
 from enum import Enum
 from SellStrategies.MovingAverage import MovingAverage
+from SellStrategies.LogAverage import LogAverage
 
 
 class SellTypes(Enum):
     MOVING_AVG = 1
     EXP_MOVING_AVG = 2
     OTHER_SELL_STRAT = 3
+    LOG_AVG = 4
 
 
 def sell_type_to_string(st):
@@ -20,6 +22,8 @@ def sell_type_to_string(st):
         return "Exponential Moving Avg"
     if st == SellTypes.OTHER_SELL_STRAT:
         return "Other Sell Strategy"
+    if st == SellTypes.LOG_AVG:
+        return "Log Based Average"
 
 
 def sell_type_to_int(st):
@@ -29,6 +33,8 @@ def sell_type_to_int(st):
         return 2
     if st == SellTypes.OTHER_SELL_STRAT:
         return 3
+    if st == SellTypes.LOG_AVG:
+        return 4
 
 
 def valid_st(st):
@@ -45,7 +51,8 @@ def _int_to_st(st):
         return SellTypes.EXP_MOVING_AVG
     if st == 3:
         return SellTypes.OTHER_SELL_STRAT
-
+    if st == 4:
+        return SellTypes.LOG_AVG
 
 def new_sell_strategy(st, *args):
     st = _int_to_st(st)
@@ -53,4 +60,6 @@ def new_sell_strategy(st, *args):
         if args:
             return MovingAverage(args[0], args[1])
         return MovingAverage()
+    if st == SellTypes.LOG_AVG:
+        return LogAverage()
     # TODO As you create more buy strategies fill them in here.

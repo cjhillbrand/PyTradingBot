@@ -59,6 +59,10 @@ class MovingAverage(BuyStrategy):
                 exit(1)
         return result
 
+    def buy_now(self, historical_data, data):
+        print("Lets buy")
+        # TODO talk to conner to learn how to implement the logic here
+
 
 
 

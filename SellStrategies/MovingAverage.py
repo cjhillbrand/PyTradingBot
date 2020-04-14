@@ -56,6 +56,10 @@ class MovingAverage(SellStrategy):
                 print('Encountered Index error find sell times at index %d' % i)
         return result
 
+    def sell_now(self, historical_data, data):
+        print("Lets sell now")
+        # TODO talk to conner to learn how to implement the logic here
+
 
 
 

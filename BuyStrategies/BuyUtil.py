@@ -1,11 +1,13 @@
 from enum import Enum
 from BuyStrategies.MovingAverage import MovingAverage
+from BuyStrategies.LogAverage import LogAverage
 
 
 class BuyTypes(Enum):
     MOVING_AVG = 1
     EXP_MOVING_AVG = 2
     OTHER_BUY_STRAT = 3
+    LOG_AVG = 4
 
 
 def buy_type_to_string(bt):
@@ -17,6 +19,8 @@ def buy_type_to_string(bt):
         return "Exponential Moving Avg"
     if bt == BuyTypes.OTHER_BUY_STRAT:
         return "Other Buy Strategy"
+    if bt == BuyTypes.LOG_AVG:
+        return "Log Based Average"
 
 
 def buy_type_to_int(bt):
@@ -26,6 +30,8 @@ def buy_type_to_int(bt):
         return 2
     if bt == BuyTypes.OTHER_BUY_STRAT:
         return 3
+    if bt == BuyTypes.LOG_AVG:
+        return 4
 
 
 def valid_bt(bt):
@@ -42,6 +48,8 @@ def _int_to_bt(bt):
         return BuyTypes.EXP_MOVING_AVG
     if bt == 3:
         return BuyTypes.OTHER_BUY_STRAT
+    if bt == 4:
+        return BuyTypes.LOG_AVG
 
 
 def new_buy_strategy(bt, *args):
@@ -50,4 +58,7 @@ def new_buy_strategy(bt, *args):
         if args:
             return MovingAverage(args[0], args[1])
         return MovingAverage()
+    if bt == BuyTypes.LOG_AVG:
+        return LogAverage()
+    return
     # TODO As you create more buy strategies fill them in here.

@@ -12,7 +12,5 @@ class BuyStrategy:
     def get_buy_times(self, days, data):
         raise Exception("SUBCLASS MUST IMPLEMENT GET_BUY_TIME")
 
-
-
-
-
+    def buy_now(self, historical_data, data):
+        raise Exception("SUBCLASS MUST IMPLEMENT BUY_NOW")

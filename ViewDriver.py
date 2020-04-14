@@ -64,9 +64,9 @@ def get_sell_strategy():
 if __name__ == "__main__":
     print("Welcome to the Stonk Machine. Please follow the prompts...\n")
     ans = 's'
-    while ans != 'o' and ans != 'r':
-        ans = input('Track ( o )ne symbol or ( r )ussell 2000?\n--> ').lower()
-        if ans == 'o':
+    while ans != 'o' and ans != 'r' and ans != 'c':
+        ans = input('Track ( o )ne symbol or ( r )ussell 2000 or ( c )rypto?\n--> ').lower()
+        if ans == 'o' or ans == 'c':
             # Grab the symbol from the user. At this location we do not care of the contents
             # of the Symbol, we only care that the user approves of their input
             symbol = get_symbol()
@@ -78,7 +78,10 @@ if __name__ == "__main__":
                 # Keep getting new symbol and trying again.
                 print("You have entered an Incorrect Symbol please try again...")
                 symbol = get_symbol()
-                code = cont.fill_data(symbol)
+                if ans == 'c':
+                    code = cont.fill_data(symbol, True)
+                else:
+                    code = cont.fill_data(symbol)
 
             print('Success loading', symbol, '\n')
         elif ans == 'r':
