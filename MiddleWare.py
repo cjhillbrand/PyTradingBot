@@ -26,8 +26,8 @@ class MiddleWare:
         with open('./AlphaVantageApiKey.json') as fid:
             data = json.load(fid)
             self.key = data['Key']
-            twilio_sid = data['account_sid']
-            twilio_auth = data['auth_token']
+            twilio_sid = data['twilio']['account_sid']
+            twilio_auth = data['twilio']['auth_token']
             self.t_client = Client(twilio_sid, twilio_auth)
             self.numbers = data['numbers']
             self.from_number = data['phone_number']

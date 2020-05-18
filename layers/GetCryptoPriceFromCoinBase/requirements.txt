@@ -1,0 +1,16 @@
+-i https://pypi.org/simple
+boto3==1.13.6
+botocore==1.16.6
+certifi==2020.4.5.1
+chardet==3.0.4
+coinbase==2.1.0
+docutils==0.15.2
+idna==2.9
+jmespath==0.9.5
+psycopg2-binary==2.8.5
+pycryptodome==3.9.7
+python-dateutil==2.8.1
+requests==2.23.0
+s3transfer==0.3.3
+six==1.14.0
+urllib3==1.25.9 ; python_version != '3.4'
